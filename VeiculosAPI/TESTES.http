@@ -1,0 +1,206 @@
+### Sistema de Locação de Veículos - Testes de API
+
+### Variáveis
+@baseUrl = http://localhost:5065/api
+
+### ============================================
+### TESTES CRUD BÁSICOS
+### ============================================
+
+### 1. Criar Fabricante
+POST {{baseUrl}}/Fabricantes
+Content-Type: application/json
+
+{
+  "nome": "Toyota"
+}
+
+### 2. Listar Fabricantes
+GET {{baseUrl}}/Fabricantes
+
+### 3. Obter Fabricante por ID
+GET {{baseUrl}}/Fabricantes/1
+
+### 4. Atualizar Fabricante
+PUT {{baseUrl}}/Fabricantes/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "nome": "Toyota Atualizado"
+}
+
+### 5. Deletar Fabricante
+DELETE {{baseUrl}}/Fabricantes/1
+
+### ============================================
+### TESTES DE VEÍCULOS
+### ============================================
+
+### 6. Criar Veículo
+POST {{baseUrl}}/Veiculos
+Content-Type: application/json
+
+{
+  "modelo": "Corolla",
+  "anoFabricacao": 2020,
+  "quilometragem": 50000,
+  "fabricanteId": 1
+}
+
+### 7. Listar Veículos
+GET {{baseUrl}}/Veiculos
+
+### 8. Obter Veículo por ID
+GET {{baseUrl}}/Veiculos/1
+
+### ============================================
+### TESTES DE CLIENTES
+### ============================================
+
+### 9. Criar Cliente
+POST {{baseUrl}}/Clientes
+Content-Type: application/json
+
+{
+  "nome": "João Silva",
+  "cpf": "123.456.789-00",
+  "email": "joao@example.com"
+}
+
+### 10. Listar Clientes
+GET {{baseUrl}}/Clientes
+
+### 11. Obter Cliente por ID
+GET {{baseUrl}}/Clientes/1
+
+### ============================================
+### TESTES DE ALUGUEIS
+### ============================================
+
+### 12. Criar Aluguel
+POST {{baseUrl}}/Alugueis
+Content-Type: application/json
+
+{
+  "clienteId": 1,
+  "veiculoId": 1,
+  "dataInicio": "2026-04-15T10:00:00",
+  "dataFim": "2026-04-20T10:00:00",
+  "quilometragemInicial": 50000,
+  "valorDiaria": 150,
+  "valorTotal": 750
+}
+
+### 13. Listar Alugueis
+GET {{baseUrl}}/Alugueis
+
+### 14. Obter Aluguel por ID
+GET {{baseUrl}}/Alugueis/1
+
+### ============================================
+### TESTES DE PAGAMENTOS
+### ============================================
+
+### 15. Criar Pagamento
+POST {{baseUrl}}/Pagamentos
+Content-Type: application/json
+
+{
+  "aluguelId": 1,
+  "valor": 750,
+  "dataPagamento": "2026-04-20T15:00:00",
+  "metodoPagamento": "Cartão"
+}
+
+### 16. Listar Pagamentos
+GET {{baseUrl}}/Pagamentos
+
+### 17. Obter Pagamento por ID
+GET {{baseUrl}}/Pagamentos/1
+
+### ============================================
+### TESTES DOS 5 FILTROS COM JOINS
+### ============================================
+
+### FILTRO 1: Alugueis por Cliente
+### Join: Cliente -> Aluguel
+GET {{baseUrl}}/Alugueis/por-cliente/1
+
+### FILTRO 2: Alugueis Ativos
+### Join: Aluguel -> Cliente + Aluguel -> Veiculo
+GET {{baseUrl}}/Alugueis/ativos
+
+### FILTRO 3: Veículos por Fabricante
+### Join: Fabricante -> Veiculo
+GET {{baseUrl}}/Veiculos/por-fabricante/1
+
+### FILTRO 4: Pagamentos por Cliente
+### Join: Aluguel -> Cliente + Pagamento -> Aluguel (ThenInclude)
+GET {{baseUrl}}/Pagamentos/por-cliente/1
+
+### FILTRO 5: Total de Pagamentos por Cliente
+### Join: Aluguel -> Cliente + Pagamento -> Aluguel + Agregação (SUM)
+GET {{baseUrl}}/Pagamentos/total-por-cliente/1
+
+### ============================================
+### TESTES DE VALIDAÇÃO
+### ============================================
+
+### Teste: Cliente com email duplicado (deve retornar 400)
+POST {{baseUrl}}/Clientes
+Content-Type: application/json
+
+{
+  "nome": "Maria Santos",
+  "cpf": "987.654.321-00",
+  "email": "joao@example.com"
+}
+
+### Teste: Cliente com CPF duplicado (deve retornar 400)
+POST {{baseUrl}}/Clientes
+Content-Type: application/json
+
+{
+  "nome": "Maria Santos",
+  "cpf": "123.456.789-00",
+  "email": "maria@example.com"
+}
+
+### Teste: Aluguel com cliente inexistente (deve retornar erro)
+POST {{baseUrl}}/Alugueis
+Content-Type: application/json
+
+{
+  "clienteId": 999,
+  "veiculoId": 1,
+  "dataInicio": "2026-05-01T10:00:00",
+  "dataFim": "2026-05-05T10:00:00",
+  "quilometragemInicial": 50000,
+  "valorDiaria": 100,
+  "valorTotal": 500
+}
+
+### ============================================
+### TESTES DE ATUALIZAÇÃO E DEVOLUÇÃO
+### ============================================
+
+### Atualizar Aluguel (registrar devolução)
+PUT {{baseUrl}}/Alugueis/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "clienteId": 1,
+  "veiculoId": 1,
+  "dataInicio": "2026-04-15T10:00:00",
+  "dataFim": "2026-04-20T10:00:00",
+  "quilometragemInicial": 50000,
+  "quilometragemFinal": 50500,
+  "valorDiaria": 150,
+  "valorTotal": 750,
+  "dataDevolucao": "2026-04-20T14:00:00"
+}
+
+### Verificar Alugueis Ativos (deve estar vazio após devolução)
+GET {{baseUrl}}/Alugueis/ativos
